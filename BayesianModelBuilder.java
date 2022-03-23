@@ -33,8 +33,8 @@ public class BayesianModelBuilder {
 	}
 	
 	//count words 
-	Map<String, Integer> wordCounter(File[] fileList){
-		Map<String, Integer> wordList = new HashMap<>();
+	static HashMap<String, Integer> wordCounter(File[] fileList){
+		HashMap<String, Integer> wordList = new HashMap<>();
 		for(File inputFile : fileList) {
 			try(BufferedReader bfReader = new BufferedReader(new FileReader(inputFile))){
 				String line;
@@ -59,13 +59,15 @@ public class BayesianModelBuilder {
 	}
 	
 	//select useful words 
-	Map<String, Integer> selectWords(Map<String, Integer> list1, Map<String, Integer> list2){
-		Map<String, Integer> wordList = new HashMap<>();
+	static HashMap<String, Integer> selectWords(Map<String, Integer> list1, Map<String, Integer> list2){
+		HashMap<String, Integer> wordList = new HashMap<>();
 		
 		for(Entry<String, Integer> entry : list1.entrySet()) {
 			String word = entry.getKey();
-			if(list2.containsKey(word)) continue;
+			//if word is only in one list, then ignore it 
+			if(!list2.containsKey(word)) continue;
 			double x = Math.abs((Math.log(entry.getValue()/list2.get(word)))/Math.log(2));
+			
 		}
 		
 		
@@ -73,7 +75,8 @@ public class BayesianModelBuilder {
 	}
 	
 	
-	//compute likelihood of a word 
+	//compute likelihoods
+	
 	
 	//classify 
 	
