@@ -4,41 +4,66 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class BayesianModelBuilder {
-	
+
 	Map<String, Integer> posList = new HashMap<>();		//list of words with # of occurrences of each word
-	Map<String, Integer> negList = new HashMap<>();		//in negative reviews 
-	static final int POS = 810;			//# of positive reviews 
-	static final int NEG = 810;			//# of negative reviews 
-	static final int TOTAL = 1620;		//# of total reviews 
-	
-	
-	//take the paths to a folder of text files as input 
-	BayesianModelBuilder(String path1, String path2){	
-		
+	Map<String, Integer> negList = new HashMap<>();		//in negative reviews
+	static final int POS = 810;			//# of positive reviews
+	static final int NEG = 810;			//# of negative reviews
+	static final int TOTAL = 1620;		//# of total reviews
+
+
+	//take the paths to a folder of text files as input
+	BayesianModelBuilder(String path1, String path2){
+
 		//open the positive review folder and list the files in it
 		File inputFolder = new File(path1);
 		File fileList[] = inputFolder.listFiles();
-		//count occurrences of every word appears in the files 
+		//count occurrences of every word appears in the files
 		this.posList = wordCounter(fileList);
-		
+
 		//negative folder
 		inputFolder = new File(path2);
 		fileList = inputFolder.listFiles();
-		//count occurrences of every word appears in the files 
-		this.posList = wordCounter(fileList);
-		
-		
-		//select useful words 
-		
+		//count occurrences of every word appears in the files
+		this.negList = wordCounter(fileList);
+
+
+		//select useful words using mutual information for positive reviews
+		HashMap<String, Integer> positiveEvidence = new HashMap<>();
+		positiveEvidence = selectWords(posList,negList);
+
+
+		//Repeat process for negative reviews
+		HashMap<String, Integer> negativeEvidence = new HashMap<>();
+		negativeEvidence = selectWords(negList, posList);
+
+		//Compute probabilities given evidences for both negative and positive reviews
+		HashMap<String, ArrayList<Double>> posWordProbabilities = conditionalProbabilities(positiveEvidence,
+				posList,negList);
+
+		HashMap<String, ArrayList<Double>> negWordProbabilities = conditionalProbabilities(negativeEvidence,
+				posList,negList);
+
+		//Compute best 5 evidences for both positive and negative reviews and print them
+
+
+
+
 	}
-	
-	//count words 
+
+
+	static void findTop5Positive(HashMap<String, ArrayList<Double>> input){
+
+	}
+
+
+	//count words
 	static HashMap<String, Integer> wordCounter(File[] fileList){
 		HashMap<String, Integer> wordList = new HashMap<>();
 		for(File inputFile : fileList) {
 			try(BufferedReader bfReader = new BufferedReader(new FileReader(inputFile))){
 				String line;
-				//read file line by line and tokenize each line into an array of words 
+				//read file line by line and tokenize each line into an array of words
 				while((line = bfReader.readLine()) != null) {
 					String[] strArr = line.split("\\.|\\,|\\(|\\)|\"|\\s|\\?|-|\\n|\\t");
 					for(String word : strArr) {
@@ -49,7 +74,7 @@ public class BayesianModelBuilder {
 							else wordList.put(word, 1);
 						}
 					}
-					
+
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -57,29 +82,56 @@ public class BayesianModelBuilder {
 		}
 		return wordList;
 	}
-	
-	//select useful words 
+
+	//select useful words
 	static HashMap<String, Integer> selectWords(Map<String, Integer> list1, Map<String, Integer> list2){
 		HashMap<String, Integer> wordList = new HashMap<>();
-		
-		for(Entry<String, Integer> entry : list1.entrySet()) {
+		//iterate through list1
+		for(Map.Entry<String, Integer> entry : list1.entrySet()) {
 			String word = entry.getKey();
-			//if word is only in one list, then ignore it 
+			//if word is only in one list, then ignore it
 			if(!list2.containsKey(word)) continue;
 			double x = Math.abs((Math.log(entry.getValue()/list2.get(word)))/Math.log(2));
-			
+			//if value of x is greater than 2, then we know that the word would be good evidence
+			if(x > 2){
+				//store word along with the number of times it appears in all reviews
+				wordList.put(word, entry.getValue() + list2.get(word));
+			}
 		}
-		
-		
 		return wordList;
 	}
-	
-	
-	//compute likelihoods
-	
-	
-	//classify 
-	
 
-	
+
+	//compute likelihoods (Conditional Probabilities of word)
+	static HashMap<String, ArrayList<Double>> conditionalProbabilities(Map<String,Integer> wordList,Map<String,
+			Integer> posList, Map<String, Integer> negList ){
+		HashMap<String,ArrayList<Double>> wordProbabilities = new HashMap<>();
+		//P(Positive | word) = a * P(word | Positive) * P(word)
+		for(Map.Entry<String,Integer> entry : wordList.entrySet()){
+			//How likely does the word appear in all reviews
+			double p_Word = entry.getValue() / 1620;
+			//How likely does the word appear given positive
+			double p_WordGivenPos = posList.get(entry.getKey()) / 810;
+			//How likely does the word appear given negative
+			double p_WordGivenNeg = negList.get(entry.getKey()) / 810;
+			// compute P(Positive | word) without constant a
+			double p_PositiveGivenWord = p_Word * p_WordGivenPos;
+			double p_NegativeGivenWord = p_Word * p_WordGivenNeg;
+			// find normalization constant
+			double a = 1 / (p_PositiveGivenWord + p_NegativeGivenWord);
+			//Store word with values of P(Positive|word) in the hashmap
+			ArrayList<Double> condProbabilitiesGivenWord = new ArrayList<>();
+			condProbabilitiesGivenWord.add(a * p_PositiveGivenWord);
+			condProbabilitiesGivenWord.add(a * p_NegativeGivenWord);
+			wordProbabilities.put(entry.getKey(), condProbabilitiesGivenWord);
+		}
+		return wordProbabilities;
+	}
+
+
+	//classify
+
+
+
+
 }
