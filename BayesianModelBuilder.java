@@ -99,40 +99,25 @@ public class BayesianModelBuilder {
 	}
 
 
-	//compute likelihoods (Conditional Probabilities of word)
-	static HashMap<String, ArrayList<Double>> conditionalProbabilities(Map<String,Integer> wordList,Map<String,
-			Integer> posList, Map<String, Integer> negList ){
-		HashMap<String,ArrayList<Double>> wordProbabilities = new HashMap<>();
-		
-		//P(Positive | word) = a * P(word | Positive) * P(Positive)
-		for(Map.Entry<String,Integer> entry : wordList.entrySet()){
+	static HashMap<String, Double> computePosteriors(HashMap<String, Double> list){
+		HashMap<String, Double> posteriors = new HashMap<>();
+
+		for(Entry<String, Double> entry : list.entrySet()){
 			
-			//How likely does the word appear in all reviews
-			double p_Word = entry.getValue() / 1620.0;
+			//How likely does the word appear in given list
+			double likelihood = (entry.getValue()+0.01) / 810.0;
+
+			// find normalization constant = 1/P(Word)
+			double a = 1.0 / (entry.getValue() / 810.0);
 			
-			//How likely does the word appear given positive
-			double p_WordGivenPos = 0;
-			if(posList.containsKey(entry.getKey()))
-				p_WordGivenPos = posList.get(entry.getKey()) / 810.0;
+			//Posterior = normalization constant * likelihood * prior
+			//P(Positive) = a * P(Word|Positive) * P(Word)
+			double posterior = a * likelihood * 0.5;
 			
-			//How likely does the word appear given negative
-			double p_WordGivenNeg = 0;
-			if(negList.containsKey(entry.getKey()))
-				p_WordGivenNeg = negList.get(entry.getKey()) / 810.0;
-			
-			// compute P(Positive | word) without constant a
-			double p_PositiveGivenWord = 0.5 * p_WordGivenPos;
-			double p_NegativeGivenWord = 0.5 * p_WordGivenNeg;
-			
-			// find normalization constant
-			double a = 1 / (p_PositiveGivenWord + p_NegativeGivenWord);
-			//Store word with values of P(Positive|word) in the hashmap
-			ArrayList<Double> condProbabilitiesGivenWord = new ArrayList<>();
-			condProbabilitiesGivenWord.add(a * p_PositiveGivenWord);
-			condProbabilitiesGivenWord.add(a * p_NegativeGivenWord);
-			wordProbabilities.put(entry.getKey(), condProbabilitiesGivenWord);
+			posteriors.put(entry.getKey(), posterior);
 		}
-		return wordProbabilities;
+		
+		return posteriors;
 	}
 
 
