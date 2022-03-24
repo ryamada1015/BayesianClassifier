@@ -58,23 +58,23 @@ public class BayesianModelBuilder {
 
 
 	//count words
-	static HashMap<String, Integer> wordCounter(File[] fileList){
-		HashMap<String, Integer> wordList = new HashMap<>();
+	static HashMap<String, Double> wordCounter(File[] fileList){
+		HashMap<String, Double> wordList = new HashMap<>();
 		for(File inputFile : fileList) {
 			try(BufferedReader bfReader = new BufferedReader(new FileReader(inputFile))){
 				String line;
-				//read file line by line and tokenize each line into an array of words
+				//read file line by line and tokenize each line into an array of words 
 				while((line = bfReader.readLine()) != null) {
-					String[] strArr = line.split("\\.|\\,|\\(|\\)|\"|\\s|\\?|-|\\n|\\t");
+					String[] strArr = line.split("[^a-zA-Z0-9']+");
 					for(String word : strArr) {
-						if(!(word.equals("") || word.equals("'"))) {
+						if(!(word.equals("") || (word.indexOf("'")==word.length()-1) || (word.indexOf("'")==0))) {
 							//if the word seen already, increment the counter; add it to map with counter 1
 							if(wordList.containsKey(word))
 								wordList.put(word, wordList.get(word)+1);
-							else wordList.put(word, 1);
+							else wordList.put(word, 1.0);
 						}
 					}
-
+					
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -83,22 +83,19 @@ public class BayesianModelBuilder {
 		return wordList;
 	}
 
-	//select useful words
-	static HashMap<String, Integer> selectWords(Map<String, Integer> list1, Map<String, Integer> list2){
-		HashMap<String, Integer> wordList = new HashMap<>();
-		//iterate through list1
-		for(Map.Entry<String, Integer> entry : list1.entrySet()) {
+	//select useful features 
+	static HashMap<String, Double> computeIG(HashMap<String, Double> posList, HashMap<String, Double> negList){
+		HashMap<String, Double> sorted = new HashMap<>();
+		
+		for(Entry<String, Double> entry : posList.entrySet()) {
 			String word = entry.getKey();
-			//if word is only in one list, then ignore it
-			if(!list2.containsKey(word)) continue;
-			double x = Math.abs((Math.log(entry.getValue()/list2.get(word)))/Math.log(2));
-			//if value of x is greater than 2, then we know that the word would be good evidence
-			if(x > 2){
-				//store word along with the number of times it appears in all reviews
-				wordList.put(word, entry.getValue() + list2.get(word));
-			}
+			
+			//if word is only in one list, then ignore it 
+			if(!negList.containsKey(word)) continue;
+			double ig = Math.abs(Math.log(entry.getValue()/negList.get(word)))/Math.log(2);
+			sorted.put(word, ig);
 		}
-		return wordList;
+		return sorted;
 	}
 
 
@@ -129,7 +126,6 @@ public class BayesianModelBuilder {
 	}
 
 
-	//classify
 
 
 
