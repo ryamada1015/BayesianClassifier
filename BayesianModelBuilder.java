@@ -44,6 +44,20 @@ public class BayesianModelBuilder {
 		HashMap<String, ArrayList<Double>> negWordProbabilities = conditionalProbabilities(negativeEvidence,
 				posList,negList);
 
+		
+		
+		
+		//sort posteriors
+		LinkedHashMap<String, Double> sortedP = new LinkedHashMap<>();
+		posWordProbabilities.entrySet().stream().sorted(Map.Entry.comparingByValue())
+		.forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+		
+		LinkedHashMap<String, Double> sortedN = new LinkedHashMap<>();
+		negWordProbabilities.entrySet().stream().sorted(Map.Entry.comparingByValue())
+		.forEachOrdered(x -> sorted.put(x.getKey(), x.getValue()));
+		
+		
+		
 		//Compute best 5 evidences for both positive and negative reviews and print them
 
 
