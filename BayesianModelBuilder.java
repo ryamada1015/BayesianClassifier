@@ -82,6 +82,18 @@ public class BayesianModelBuilder {
 		}
 		return wordList;
 	}
+	
+	//compute likelihoods
+	static HashMap<String, Double> computeLikelihoods(HashMap<String, Double> list){
+		HashMap<String, Double> likelihoods = new HashMap<>();
+
+		for(Entry<String, Double> entry : list.entrySet()) {
+			double likelihood = entry.getValue()/810.0;
+			likelihoods.put(entry.getKey(), likelihood);
+		}
+		
+		return likelihoods;
+	}
 
 	//select useful features 
 	static HashMap<String, Double> computeIG(HashMap<String, Double> posList, HashMap<String, Double> negList){
