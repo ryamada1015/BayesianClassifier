@@ -121,8 +121,9 @@ public class BayesianModelBuilder {
 				p_WordGivenNeg = negList.get(entry.getKey()) / 810.0;
 			
 			// compute P(Positive | word) without constant a
-			double p_PositiveGivenWord = p_Word * p_WordGivenPos;
-			double p_NegativeGivenWord = p_Word * p_WordGivenNeg;
+			double p_PositiveGivenWord = 0.5 * p_WordGivenPos;
+			double p_NegativeGivenWord = 0.5 * p_WordGivenNeg;
+			
 			// find normalization constant
 			double a = 1 / (p_PositiveGivenWord + p_NegativeGivenWord);
 			//Store word with values of P(Positive|word) in the hashmap
