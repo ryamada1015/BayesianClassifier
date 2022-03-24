@@ -103,14 +103,23 @@ public class BayesianModelBuilder {
 	static HashMap<String, ArrayList<Double>> conditionalProbabilities(Map<String,Integer> wordList,Map<String,
 			Integer> posList, Map<String, Integer> negList ){
 		HashMap<String,ArrayList<Double>> wordProbabilities = new HashMap<>();
-		//P(Positive | word) = a * P(word | Positive) * P(word)
+		
+		//P(Positive | word) = a * P(word | Positive) * P(Positive)
 		for(Map.Entry<String,Integer> entry : wordList.entrySet()){
+			
 			//How likely does the word appear in all reviews
-			double p_Word = entry.getValue() / 1620;
+			double p_Word = entry.getValue() / 1620.0;
+			
 			//How likely does the word appear given positive
-			double p_WordGivenPos = posList.get(entry.getKey()) / 810;
+			double p_WordGivenPos = 0;
+			if(posList.containsKey(entry.getKey()))
+				p_WordGivenPos = posList.get(entry.getKey()) / 810.0;
+			
 			//How likely does the word appear given negative
-			double p_WordGivenNeg = negList.get(entry.getKey()) / 810;
+			double p_WordGivenNeg = 0;
+			if(negList.containsKey(entry.getKey()))
+				p_WordGivenNeg = negList.get(entry.getKey()) / 810.0;
+			
 			// compute P(Positive | word) without constant a
 			double p_PositiveGivenWord = p_Word * p_WordGivenPos;
 			double p_NegativeGivenWord = p_Word * p_WordGivenNeg;
